@@ -1,43 +1,95 @@
 package org.laborator7;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+
+import java.util.*;
 
 public class Board {
-    private int size;
-    private int intervalLimit;
-    private List<Token> tokenList;
-
-    Board(int size,int interval){
-        tokenList = new ArrayList<>();
-        this.size=size;
-        this.intervalLimit = interval;
-        generateTokens();
-    }
-    public List<Token> getTokenList() {
-        return tokenList;
-    }
-    public void generateTokens(){
-        int interval[] = new int[intervalLimit];
-        for (int iterator = 0;iterator<intervalLimit;iterator++){
-            interval[iterator]=0;
+    private int table[][];
+    private int lastOrder;
+    private  int size;
+    private List<Map.Entry<Integer,Integer>> availableCells= new ArrayList<>();
+    Board(int size){
+        lastOrder = 2;
+        this.size = size;
+        table = new int[size+1][size+1];
+        for (int iterator1 = 1 ;iterator1 <= size;iterator1++ ){
+           for (int iterator2 = 1 ;iterator2 <= size;iterator2++ ){
+               table[iterator1][iterator2]=0;
+               Map.Entry<Integer,Integer> pair=new AbstractMap.SimpleEntry<>(iterator1,iterator2);
+               availableCells.add(pair);
+           }
         }
-        while(tokenList.size() != size ){
-            Random random = new Random();
-            int randNumber = random.nextInt(intervalLimit);
-            if (interval[randNumber] == 0){
-                interval[randNumber] = 1;
-                Token token = new Token(randNumber);
-                tokenList.add(token);
+    }
+
+    public String playerMove(int pozX, int pozY,int playersOrder){
+        if (this.table[pozX][pozY]==0 && lastOrder!=playersOrder){
+            this.table[pozX][pozY]=playersOrder;
+            lastOrder = playersOrder;
+            Map.Entry<Integer,Integer> pair=new AbstractMap.SimpleEntry<>(pozX,pozY);
+            availableCells.remove(pair);
+            if(checkWinner()!=0) availableCells.clear();
+            return "Done";
+        } else return "This cell is occupied, see available cells!";
+    }
+
+    public List<Map.Entry<Integer, Integer>> getAvailableCells() {
+        return availableCells;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public int[][] getTable() {
+        return table;
+    }
+    public void printTable(){
+        for (int iterator1 = 1 ;iterator1 <= size;iterator1++ ) {
+            for (int iterator2 = 1; iterator2 <= size; iterator2++) {
+                if (table[iterator1][iterator2]==1)System.out.printf("X "); else
+                if (table[iterator1][iterator2]==2)System.out.printf("0 "); else System.out.printf("N ");
+            }
+            System.out.printf("\n");
+        }
+    }
+    public int checkWinner(){
+        //check on rows
+        int winner = 0;
+        for (int iterator1 = 1 ;iterator1<=size && winner==0;iterator1++){
+            for(int iterator2 =2 ;iterator2<=size;iterator2++)
+                if (table[iterator1][iterator2] != table[iterator1][iterator2-1]){
+                    winner = 0;
+                    break;
+                } else winner = table[iterator1][iterator2];
+        }
+        //check on columns
+        if(winner == 0){
+            for (int iterator2 = 1 ;iterator2<=size && winner==0;iterator2++){
+                for(int iterator1 =2 ;iterator1<=size;iterator1++)
+                    if (table[iterator1][iterator2] != table[iterator1-1][iterator2]){
+                        winner = 0;
+                        break;
+                    } else winner = table[iterator1][iterator2];
             }
         }
-    }
+        //check on main diagonal
+        if (winner == 0){
+            for (int iterator =2;iterator<=size;iterator++){
+                if (table[iterator][iterator]!=table[iterator-1][iterator-1]){
+                    winner = 0;
+                    break;
+                } else winner = table[iterator][iterator];
+            }
+        }
+        if (winner == 0){
+            for (int iterator =2;iterator<=size;iterator++){
+                if (table[iterator][size-iterator+1]!=table[iterator-1][size-iterator+2]){
+                    winner = 0;
+                    break;
+                } else winner = table[iterator][size-iterator+1];
+            }
 
-    public void removeToken(){
-        tokenList.remove(tokenList.size()-1);
-    }
-    public Token getLastToken(){
-        return tokenList.get(tokenList.size()-1);
+        }
+        return winner;
     }
 }
